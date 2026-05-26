@@ -1,0 +1,376 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║                     LearnMate AI - Complete LLM Workflow                       ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+                            🎓 STUDENT JOURNEY 🎓
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STAGE 1: STUDENT SELECTS TOPIC                                              ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                              ┃
+┃                     ┌──────────────────────────────┐                        ┃
+┃                     │  Select Topic Input          │                        ┃
+┃                     │  (e.g., Python Programming) │                        ┃
+┃                     └──────────────┬───────────────┘                        ┃
+┃                                    │                                         ┃
+┃                                    ↓                                         ┃
+┃                     ┌──────────────────────────────┐                        ┃
+┃                     │  POST /generate-questions    │                        ┃
+┃                     │  Body: {"topic": "..."}      │                        ┃
+┃                     └──────────────┬───────────────┘                        ┃
+┃                                    │                                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STAGE 2: QUESTION GENERATION (ROUND 1 - BEGINNER)                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                              ┃
+┃  Backend (learning.py)                                                      ┃
+┃         │                                                                    ┃
+┃         └──→ question_service.generate_questions(topic, "beginner")        ┃
+┃              │                                                              ┃
+┃              └──→ Create QUESTION_GENERATION_PROMPT                        ┃
+┃                   "Generate 5 core concept MCQs about {topic}..."         ┃
+┃                   │                                                         ┃
+┃                   └──→ query_model(prompt, model="Mistral-7B")            ┃
+┃                        │                                                    ┃
+┃                        ┌─────────────────────────────────────┐            ┃
+┃                        │  Hugging Face Inference API         │            ┃
+┃                        │  POST /models/mistralai/Mistral-7B  │            ┃
+┃                        │  Input: {"inputs": prompt}          │            ┃
+┃                        └─────────────┬───────────────────────┘            ┃
+┃                                      │                                     ┃
+┃                    Response: [{"generated_text": "[{...}, {...}, ...]"}]  ┃
+┃                                      │                                     ┃
+┃                                      ↓                                     ┃
+┃                    Parse JSON array of 5 MCQs                             ┃
+┃                                      │                                     ┃
+┃                                      ↓                                     ┃
+┃              ┌──────────────────────────────────────┐                     ┃
+┃              │ Response to Frontend:                 │                     ┃
+┃              │ {                                     │                     ┃
+┃              │   "questions": [                      │                     ┃
+┃              │     {                                 │                     ┃
+┃              │       "question": "What is...",       │                     ┃
+┃              │       "options": ["A", "B", "C", "D"],│                     ┃
+┃              │       "correct_answer": "A"           │                     ┃
+┃              │     },                                │                     ┃
+┃              │     ... (4 more)                      │                     ┃
+┃              │   ],                                  │                     ┃
+┃              │   "round": 1,                         │                     ┃
+┃              │   "total_questions": 5                │                     ┃
+┃              │ }                                     │                     ┃
+┃              └──────────────────────────────────────┘                     ┃
+┃                                      │                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STAGE 3: STUDENT ANSWERS ROUND 1                                            ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                              ┃
+┃  Student fills in answers                                                  ┃
+┃  │                                                                          ┃
+┃  └──→ POST /submit-round-1                                                ┃
+┃       {                                                                     ┃
+┃         "student_name": "Alice",                                           ┃
+┃         "topic": "Python Programming",                                     ┃
+┃         "questions": [                                                     ┃
+┃           {                                                                ┃
+┃             "question": "What is...",                                      ┃
+┃             "student_answer": "pip",                                       ┃
+┃             "correct_answer": "pip"  ✓ CORRECT                            ┃
+┃           },                                                               ┃
+┃           {                                                                ┃
+┃             "question": "What does ML stand for?",                         ┃
+┃             "student_answer": "Multi-Layer",                              ┃
+┃             "correct_answer": "Machine Learning"  ✗ WRONG                 ┃
+┃           },                                                               ┃
+┃           ... (3 more)                                                     ┃
+┃         ]                                                                  ┃
+┃       }                                                                     ┃
+┃                                                                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STAGE 4: EVALUATION (LLM AS JUDGE)                                          ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                              ┃
+┃  Backend (learning.py)                                                      ┃
+┃         │                                                                    ┃
+┃         └──→ evaluation_service.evaluate_learning(request)                ┃
+┃              │                                                              ┃
+┃              ├─→ STEP 1: Calculate Score                                  ┃
+┃              │   Correct answers: 3/5 = 60%                               ┃
+┃              │                                                              ┃
+┃              ├─→ STEP 2: Create EVALUATION_PROMPT                         ┃
+┃              │   "Act as expert evaluator for topic: Python Programming"  ┃
+┃              │   "Questions and Answers: {all answers}"                   ┃
+┃              │                                                              ┃
+┃              └─→ STEP 3: Query Specialized Judge Model                    ┃
+┃                  query_model(prompt, model="Llama-2-70b-chat-hf")        ┃
+┃                  │                                                         ┃
+┃                  ┌─────────────────────────────────────┐                 ┃
+┃                  │  Hugging Face Inference API         │                 ┃
+┃                  │  POST /models/meta-llama/Llama-...  │                 ┃
+┃                  │  (High-capacity evaluation model)   │                 ┃
+┃                  └─────────────┬───────────────────────┘                 ┃
+┃                                │                                          ┃
+┃          Llama 70B Analyzes:                                             ┃
+┃          ├─→ Correctness of each answer                                  ┃
+┃          ├─→ Depth of understanding                                      ┃
+┃          ├─→ Key strengths demonstrated                                  ┃
+┃          ├─→ Areas needing improvement                                   ┃
+┃          └─→ Appropriate proficiency level                               ┃
+┃                                │                                          ┃
+┃                                ↓                                          ┃
+┃          Response:                                                        ┃
+┃          {                                                                ┃
+┃            "score": 60,                                                   ┃
+┃            "strengths": ["Good understanding", "Practical awareness"],   ┃
+┃            "weak_areas": ["Advanced topics", "Edge cases"],              ┃
+┃            "level": "Intermediate"                                       ┃
+┃          }                                                                ┃
+┃                                │                                          ┃
+┃                                ↓                                          ┃
+┃              ┌──────────────────────────────────────┐                   ┃
+┃              │  DECISION POINT                       │                   ┃
+┃              │  if score < 50%:                      │                   ┃
+┃              │    └─→ Show Performance Analysis      │                   ┃
+┃              │        and END Assessment             │                   ┃
+┃              │  else (score >= 50%):                 │                   ┃
+┃              │    └─→ PROCEED TO ROUND 2  ✓          │                   ┃
+┃              └──────────────────────────────────────┘                   ┃
+┃                                │                                          ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STAGE 5: QUESTION GENERATION (ROUND 2 - ADVANCED + FILTERING)               ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                              ┃
+┃  Frontend sends Round 2 request with Round 1 questions                     ┃
+┃         │                                                                    ┃
+┃         POST /generate-round-2-questions                                  ┃
+┃         {                                                                   ┃
+┃           "topic": "Python Programming",                                   ┃
+┃           "round_1_questions": [Q1, Q2, Q3, Q4, Q5]  ← Important!         ┃
+┃         }                                                                   ┃
+┃         │                                                                    ┃
+┃         └──→ question_service.generate_questions(topic, "advanced")       ┃
+┃              │                                                              ┃
+┃              ├─→ Create QUESTION_GENERATION_PROMPT                        ┃
+┃              │   with difficulty="advanced"                               ┃
+┃              │                                                              ┃
+┃              ├─→ query_model(prompt, model="Mistral-7B")                 ┃
+┃              │   (Generate 5+ advanced questions)                         ┃
+┃              │                                                              ┃
+┃              ├─→ SMART FILTERING - Remove Round 1 Questions               ┃
+┃              │                                                              ┃
+┃              │   Round 1 Questions:                                        ┃
+┃              │   ✓ What is Python's package manager?                      ┃
+┃              │   ✓ What does ML stand for?                                ┃
+┃              │   ✓ Which symbol for comments?                             ┃
+┃              │   ✓ What is a dataset?                                     ┃
+┃              │   ✓ What does NumPy do?                                    ┃
+┃              │                                                              ┃
+┃              │   Generated Advanced Questions:                             ┃
+┃              │   ✓ What is Python's package manager? ✗ FILTERED OUT       ┃
+┃              │   ✓ What is GIL? ✓ KEEP                                    ┃
+┃              │   ✓ What are metaclasses? ✓ KEEP                          ┃
+┃              │   ✓ Explain curse of dimensionality? ✓ KEEP              ┃
+┃              │   ✓ What is transfer learning? ✓ KEEP                     ┃
+┃              │   ✓ What is async/await? ✓ KEEP                           ┃
+┃              │                                                              ┃
+┃              │   Result: 5 UNIQUE ADVANCED QUESTIONS                      ┃
+┃              │   (No repeats from Round 1!)                               ┃
+┃              │                                                              ┃
+┃              └─→ Response: 5 advanced, non-repeated questions             ┃
+┃                                                                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STAGE 6: STUDENT ANSWERS ROUND 2                                            ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                              ┃
+┃  Student answers advanced questions                                        ┃
+┃  │                                                                          ┃
+┃  └──→ POST /submit-round-2                                                ┃
+┃       {                                                                     ┃
+┃         "student_name": "Alice",                                           ┃
+┃         "topic": "Python Programming",                                     ┃
+┃         "questions": [...advanced answers...],                            ┃
+┃         "round_1_score": 60,                                               ┃
+┃         "round_1_evaluation": {...}                                        ┃
+┃       }                                                                     ┃
+┃                                                                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STAGE 7: FINAL EVALUATION + ANALYSIS                                        ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                              ┃
+┃  Backend orchestrates final analysis:                                      ┃
+┃                                                                              ┃
+┃  [1] evaluation_service.evaluate_learning()                                ┃
+┃      └──→ Llama 70B judges Round 2 answers                                ┃
+┃          Returns: {score, strengths, weak_areas, level}                   ┃
+┃                                                                              ┃
+┃  [2] challenge_service.generate_solution_explanation()                     ┃
+┃      └──→ Mistral 7B explains each correct answer                         ┃
+┃          Returns: Detailed markdown explanations                          ┃
+┃                                                                              ┃
+┃  [3] roadmap_service.generate_roadmap()                                    ┃
+┃      └──→ Mistral 7B creates 30-day personalized roadmap                 ┃
+┃          Level progression: Intermediate → Advanced                       ┃
+┃          Returns: Markdown roadmap with milestones                        ┃
+┃                                                                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STAGE 8: COMPREHENSIVE REPORT                                               ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                              ┃
+┃  Final Response to Frontend:                                               ┃
+┃                                                                              ┃
+┃  {                                                                          ┃
+┃    "status": "completed",                                                  ┃
+┃    "round": 2,                                                             ┃
+┃    "round_1_score": 60,          ← Round 1 Result                         ┃
+┃    "round_2_evaluation": {        ← Round 2 Judge Result                  ┃
+┃      "score": 80,                                                          ┃
+┃      "strengths": ["Strong problem-solving", "Advanced knowledge"],        ┃
+┃      "weak_areas": ["Specialized domains"],                                ┃
+┃      "level": "Advanced"                                                   ┃
+┃    },                                                                       ┃
+┃    "generated_content": {         ← Detailed Analysis                     ┃
+┃      "type": "solution",                                                   ┃
+┃      "content": "## Solution Guide for Python Programming\n\n..."        ┃
+┃    },                                                                       ┃
+┃    "roadmap": {                   ← Personalized Learning Path            ┃
+┃      "title": "Personalized Roadmap for Advanced",                        ┃
+┃      "content": "## 30-Day Advanced Roadmap\n\n..."                      ┃
+┃    },                                                                       ┃
+┃    "questions": [...]              ← All Round 2 Questions                ┃
+┃  }                                                                          ┃
+┃                                                                              ┃
+┃  Frontend displays:                                                         ┃
+┃  ✓ Comparison of Round 1 vs Round 2 scores                                ┃
+┃  ✓ Combined strengths and weaknesses                                      ┃
+┃  ✓ Detailed solution explanations                                         ┃
+┃  ✓ Interactive 30-day learning roadmap                                    ┃
+┃  ✓ Download/share report                                                  ┃
+┃                                                                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                         🎯 KEY INTELLIGENCE POINTS 🎯                          ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─ MODEL SELECTION STRATEGY ────────────────────────────────────────────────────┐
+│                                                                               │
+│  Question Generation    → Mistral 7B                                         │
+│  ├─ Why: Fast, efficient, sufficient for MCQ creation                       │
+│  ├─ Speed: ⚡ Fast (5-10 seconds)                                           │
+│  └─ Quality: ✅ Good for structured output                                  │
+│                                                                               │
+│  Evaluation/Judging     → Llama 70B  ← Uses different model!                │
+│  ├─ Why: High-capacity, nuanced analysis                                    │
+│  ├─ Speed: 🐌 Slower (15-30 seconds)                                        │
+│  ├─ Quality: ⭐⭐⭐ Excellent for judgment                                  │
+│  └─ Fallbacks: Mistral Large → Nous Hermes → Mistral 7B                    │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ QUESTION UNIQUENESS GUARANTEE ───────────────────────────────────────────────┐
+│                                                                               │
+│  Problem:   Student sees same question in Round 1 and Round 2                │
+│  Solution:  Smart filtering before returning Round 2 questions              │
+│                                                                               │
+│  Process:                                                                     │
+│  1. Generate 5+ advanced questions                                           │
+│  2. Extract all Round 1 question texts (case-insensitive)                   │
+│  3. Filter out matching questions                                            │
+│  4. If less than 5 remain, generate more                                    │
+│  5. Return exactly 5 unique advanced questions                              │
+│                                                                               │
+│  Result: ✓ ZERO question repetition across rounds!                          │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ SCORE-BASED PROGRESSION ─────────────────────────────────────────────────────┐
+│                                                                               │
+│  Score < 40%  → BEGINNER      → Performance Analysis → STOP               │
+│  Score 40-60% → EARLY BEGINNER → Performance Analysis → STOP               │
+│  Score 60-75% → INTERMEDIATE   → Round 2 → Solutions → Advanced Roadmap    │
+│  Score 75-90% → ADVANCED       → Round 2 → Solutions → Expert Roadmap      │
+│  Score 90%+   → EXPERT         → Round 2 → Solutions → Expert Roadmap      │
+│                                                                               │
+│  Proficiency Growth Path:                                                    │
+│  Beginner → Intermediate → Advanced → Expert                                 │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ API FALLBACK MECHANISM ──────────────────────────────────────────────────────┐
+│                                                                               │
+│  Primary:  Hugging Face Inference API                                        │
+│  Fallback: Auto-generated mock responses                                    │
+│                                                                               │
+│  If API unavailable:                                                         │
+│  ├─ Detect prompt type (question, evaluation, analysis, etc.)              │
+│  ├─ Generate context-aware mock response                                   │
+│  ├─ Return same format as API                                              │
+│  └─ User experience: SEAMLESS (no errors)                                  │
+│                                                                               │
+│  Benefits:                                                                    │
+│  ✓ Works offline                                                            │
+│  ✓ Development without API key                                             │
+│  ✓ Testing without rate limits                                             │
+│  ✓ Production fallback if API down                                         │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                          📊 DATA FLOW ARCHITECTURE 📊                          ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+                    ┌─ Mistral 7B (Questions)
+                    │
+Frontend ←→ FastAPI ├─ Llama 70B (Judge) ←→ Hugging Face API
+                    │
+                    └─ Mistral 7B (Solutions, Roadmaps)
+                               ↓
+                    Mock Response Fallback
+                    (If API unavailable)
+
+
+          Question         Evaluation      Solutions &
+          Generation       & Scoring       Personalization
+             │                │                │
+             ↓                ↓                ↓
+        Mistral 7B        Llama 70B        Mistral 7B
+             │                │                │
+             └────────┬───────┴────────┬───────┘
+                      │                │
+                      ↓                ↓
+                 Hugging Face      Mock Fallback
+                 Inference API    (Development Mode)
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                        ✨ WORKFLOW COMPLETE ✨                               ║
+║                                                                                ║
+║  From topic selection to personalized 30-day roadmap                         ║
+║  with intelligent question filtering and dual-model evaluation!              ║
+╚════════════════════════════════════════════════════════════════════════════════╝
