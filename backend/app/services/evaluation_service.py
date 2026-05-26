@@ -3,9 +3,18 @@ from app.services.huggingface_service import query_model, calculate_score_from_a
 from app.utils.prompts import EVALUATION_PROMPT
 from app.models.schemas import LearningAnalysisRequest
 
-async def evaluate_learning(request: LearningAnalysisRequest):
+# Model options for evaluation (ordered by preference)
+EVALUATION_MODELS = [
+    "meta-llama/Llama-2-70b-chat-hf",  # High-quality evaluation model
+    "mistralai/Mistral-Large-Instruct-2407",  # Good alternative
+    "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO",  # Community-validated model
+    "mistralai/Mistral-7B-Instruct-v0.2",  # Fallback to smaller model
+]
+
+async def evaluate_learning(request: LearningAnalysisRequest, model_index: int = 0):
     """
-    Evaluates the learner's answers using an LLM.
+    Evaluates the learner's answers using a specialized evaluation LLM.
+    Uses a different (more capable) model than question generation for better judging.
     Calculates score by comparing student answers with correct answers.
     """
     # Calculate score by comparing answers
@@ -27,7 +36,10 @@ async def evaluate_learning(request: LearningAnalysisRequest):
     prompt = EVALUATION_PROMPT.format(topic=request.topic, answers=answers_str)
 
     try:
-        response = await query_model(prompt)
+        # Use specialized evaluation model (different from question generation model)
+        selected_model = EVALUATION_MODELS[model_index] if model_index < len(EVALUATION_MODELS) else EVALUATION_MODELS[0]
+        response = await query_model(prompt, model=selected_model)
+
         # The response from the model is often a list with one item
         if isinstance(response, list) and len(response) > 0:
             generated_text = response[0].get('generated_text', '{}')

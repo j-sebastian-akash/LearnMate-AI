@@ -357,7 +357,7 @@ def generate_mock_response(prompt: str):
         return [{"generated_text": response_text}]
 
     elif "Act as an expert evaluator" in prompt:
-        # Evaluation - parse questions from prompt and calculate score
+        # Evaluation using specialized judge model - more detailed analysis
         import random
 
         # Extract score from prompt (it should be in "Score: XX" format)
@@ -365,6 +365,12 @@ def generate_mock_response(prompt: str):
         score_match = re.search(r'Score: (\d+)', prompt)
         if score_match:
             score = int(score_match.group(1))
+
+        # Extract topic for better evaluation
+        topic = "the topic"
+        topic_match = re.search(r'topic: ([^\n.]+)', prompt, re.IGNORECASE)
+        if topic_match:
+            topic = topic_match.group(1).strip()
 
         # Also try to extract questions JSON for fallback calculation
         json_match = re.search(r'\[.*?\]', prompt, re.DOTALL)
@@ -379,18 +385,26 @@ def generate_mock_response(prompt: str):
         if score_match is None:
             score = calculate_score_from_answers(questions_list) if questions_list else random.randint(20, 95)
 
-        # Vary strengths and weaknesses based on score
-        if score < 50:
-            strengths = ["Effort to learn", "Willingness to participate"]
-            weak_areas = ["Conceptual understanding", "Practical application", "Advanced topics"]
+        # More nuanced evaluation logic based on score and topic
+        if score < 40:
+            strengths = [f"Initiative to learn {topic}", "Willingness to attempt challenges", "Growth mindset"]
+            weak_areas = [f"Foundational {topic} concepts", "Core terminology and definitions", "Practical application of {topic}"]
+            level = "Beginner"
+        elif score < 60:
+            strengths = [f"Basic understanding of {topic}", "Ability to identify key concepts", f"Some practical {topic} awareness"]
+            weak_areas = [f"Deeper {topic} principles", "Complex problem-solving", "Advanced use cases"]
             level = "Beginner"
         elif score < 75:
-            strengths = ["Good understanding", "Practical awareness", "Problem-solving"]
-            weak_areas = ["Advanced topics", "Edge cases"]
+            strengths = [f"Solid {topic} foundation", "Good problem-solving skills", f"Applied knowledge of {topic}"]
+            weak_areas = [f"Advanced {topic} techniques", "Optimization strategies", "Edge case handling"]
             level = "Intermediate"
+        elif score < 90:
+            strengths = [f"Strong {topic} expertise", "Advanced problem-solving ability", "Nuanced understanding"],
+            weak_areas = [f"Specialized {topic} domains", "Cutting-edge techniques", f"{topic} performance optimization"]
+            level = "Advanced"
         else:
-            strengths = ["Excellent understanding", "Strong problem-solving", "Advanced knowledge"]
-            weak_areas = ["Niche topics", "Bleeding-edge techniques"]
+            strengths = [f"Expert-level {topic} knowledge", "Exceptional problem-solving skills", f"Mastery of complex {topic} concepts"]
+            weak_areas = [f"Niche {topic} specializations", "Emerging {topic} technologies"]
             level = "Advanced"
 
         response_text = json.dumps({
